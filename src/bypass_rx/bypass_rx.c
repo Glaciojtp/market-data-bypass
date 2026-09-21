@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
         .tx_size = XSK_RING_PROD__DEFAULT_NUM_DESCS,
         .libbpf_flags = 0,
         .xdp_flags = XDP_FLAGS_SKB_MODE, // SKB mode para emulacion/veth/lo; DRV mode para NICs fisicas
-        .bind_flags = XDP_USE_NEED_WAKEUP
+        .bind_flags = 0
     };
 
     int ifindex = if_nametoindex(ifname);
