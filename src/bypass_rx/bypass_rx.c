@@ -68,10 +68,29 @@ int main(int argc, char *argv[]) {
     int core_id = 3; // Core dedicado para bypass
     const char *csv_out = "latency_bypass.csv";
 
-    if (argc > 1) ifname = argv[1];
+    int opt;
+    while ((opt = getopt(argc, argv, "i:c:o:u:q:h")) != -1) {
+        switch (opt) {
+            case 'i': ifname = optarg; break;
+            case 'c': target_count = (size_t)strtoul(optarg, NULL, 10); break;
+            case 'o': csv_out = optarg; break;
+            case 'u': core_id = atoi(optarg); break;
+            case 'q': queue_id = atoi(optarg); break;
+            case 'h':
+                printf("Uso: %s [-i iface] [-c count] [-o csv_out] [-u core_id]\n", argv[0]);
+                return 0;
+            default: break;
+        }
+    }
+    if (optind < argc) {
+        ifname = argv[optind];
+    }
 
     signal(SIGINT, handle_sigint);
-    pin_to_core(core_id);
+    signal(SIGTERM, handle_sigint);
+    if (core_id >= 0) {
+        pin_to_core(core_id);
+    }
     mlockall(MCL_CURRENT | MCL_FUTURE);
 
     printf("====================================================\n");
