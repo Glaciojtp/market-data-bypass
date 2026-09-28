@@ -6,14 +6,13 @@
 
 ---
 
-## 1. Overview
+## 1. Overview & Project Motivation
 
-In high-frequency trading (HFT), market data (e.g., NASDAQ ITCH, CME MDP 3.0) is broadcast over UDP Multicast. Traditional Linux kernel network processing introduces unacceptable latency penalties:
-* **Context switching** between kernel space and user space.
-* **Buffer copying** from NIC ring buffers to `sk_buff` structures and finally into user buffers.
-* **SoftIRQ scheduling delays** during packet bursts (*microbursts*).
+In electronic financial markets, receiving a quote even a few microseconds later than a competitor can result in missed execution or adverse selection. Most production trading systems still consume market data feeds over UDP Multicast using standard Linux POSIX sockets. 
 
-This project implements a benchmark suite comparing **Standard POSIX UDP sockets** against **Zero-Copy Kernel Bypass (AF_XDP / eBPF and DPDK)**, measuring deterministic **tail latency** ($p90$, $p99$, $p99.9$, and maximum latency).
+While conventional sockets are simple and portable, they introduce an operating system tax: every received frame triggers hardware interrupts, context switches into kernel space, memory allocation for `sk_buff` headers, and a memory copy into the application buffer (`copy_to_user`). During volume spikes, this processing overhead causes queueing delays and latency jitter.
+
+I developed this benchmark suite to quantify that operating system overhead and build a zero-copy alternative. Using C11 and Linux Kernel Bypass via eBPF and AF_XDP (eXpress Data Path), packets are intercepted directly inside the network interface driver and routed into user-space shared memory (UMEM) via lock-free ring buffers. This eliminates CPU memory copying and reduces receive latency down to sub-microsecond levels.
 
 ---
 
